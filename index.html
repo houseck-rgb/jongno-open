@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>종로점 오픈 체크리스트</title>
+<style>
+  :root{
+    --bg:#f5f3ee;
+    --ink:#3a3f4b;
+    --ink-soft:#6b7280;
+    --navy:#2c3a52;
+    --navy-soft:#eef1f5;
+    --gold:#b8874a;
+    --gold-soft:#f3e6d0;
+    --green:#4b8f68;
+    --green-soft:#e7f3ec;
+    --orange:#c17d3a;
+    --orange-soft:#faf0e2;
+    --line:#e7e3d9;
+    --white:#ffffff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    font-family:'Noto Sans KR', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    line-height:1.5;
+    padding-bottom:64px; /* 하단 고정 바 여백 */
+  }
+  button{font-family:inherit;}
+
+  /* ── 헤더 (차분하게) ── */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:var(--white);
+    padding:18px 18px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-row1{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .topbar h1{ font-size:19px; font-weight:800; margin:0; color:var(--navy); }
+  .topbar .date{ font-size:12.5px; color:var(--ink-soft); font-weight:500; margin-top:3px; }
+  .mode-switch{ display:flex; gap:6px; }
+  .mode-btn{
+    border:1.5px solid var(--line);
+    background:var(--white); color:var(--ink-soft);
+    font-size:12.5px; font-weight:700; padding:7px 12px; border-radius:999px;
+    cursor:pointer; min-height:34px;
+  }
+  .mode-btn.active{ background:var(--navy); border-color:var(--navy); color:var(--white); }
+
+  .topbar-substrip{ display:flex; gap:8px; margin-top:12px; }
+  .mode-switch.staffmode .mode-btn{ flex:1; text-align:center; }
+
+  .progress-line{ display:flex; align-items:center; gap:10px; margin-top:14px; }
+  .progress-track{ flex:1; height:8px; background:var(--navy-soft); border-radius:99px; overflow:hidden; }
+  .progress-fill{ height:100%; background:var(--gold); width:0%; transition:width .3s; }
+  .progress-num{ font-size:13.5px; font-weight:800; color:var(--navy); white-space:nowrap; }
+
+  .wrap{ max-width:1400px; margin:0 auto; padding:18px 16px 20px; }
+
+  /* ── 카드 그리드 ── */
+  .grid{ display:grid; grid-template-columns:1fr; gap:14px; }
+  @media (min-width:640px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (min-width:1000px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+  @media (min-width:1400px){ .grid{ grid-template-columns:repeat(4,1fr); } }
+
+  .card{
+    background:var(--white);
+    border-radius:16px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    box-shadow:0 1px 3px rgba(44,58,82,0.07);
+    border-left:5px solid var(--line);
+  }
+  .card.status-normal{ border-left-color:var(--green); }
+  .card.status-issue{ border-left-color:var(--orange); }
+
+  .card-head{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    padding:16px 16px 12px;
+    cursor:pointer;
+  }
+  .card-head-left{ display:flex; gap:12px; min-width:0; }
+  .card-num{
+    width:26px; height:26px; border-radius:50%; flex:none;
+    background:var(--navy-soft); color:var(--navy);
+    font-size:12.5px; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card.status-normal .card-num{ background:var(--green-soft); color:var(--green); }
+  .card.status-issue .card-num{ background:var(--orange-soft); color:var(--orange); }
+  .card-title-wrap{ min-width:0; }
+  .card-title{ font-size:16.5px; font-weight:800; color:var(--navy); line-height:1.4; }
+  .camera-mark{ font-size:11.5px; color:var(--gold); font-weight:700; margin-left:6px; }
+  .card-crit{ font-size:13px; color:var(--ink-soft); margin-top:5px; line-height:1.5; }
+  .chev{ font-size:14px; color:var(--ink-soft); flex:none; transition:transform .2s; margin-top:4px; opacity:.6; }
+  .chev.open{ transform:rotate(180deg); }
+
+  .card-body{ padding:0 16px 16px; }
+  .steps{ margin:2px 0 12px; padding-left:22px; color:var(--ink); }
+  .steps li{ font-size:16.5px; line-height:1.85; }
+  .step-highlight{ color:#c0392b; text-decoration:underline; text-decoration-color:#c0392b; font-weight:800; }
+  .step-red{ color:#c0392b; font-weight:800; }
+  .note-line{ font-size:12.5px; color:var(--orange); background:var(--orange-soft); border-radius:10px; padding:8px 12px; margin-bottom:12px; font-weight:600; line-height:1.5; }
+
+  .photo-slots{ display:flex; gap:10px; margin-bottom:14px; }
+  .photo-slot{ flex:1; }
+  .photo-slot-label{ font-size:11.5px; color:var(--ink-soft); font-weight:600; margin-bottom:6px; line-height:1.35; min-height:28px; }
+  .photo-box{
+    width:100%; aspect-ratio:4/3;
+    border:1.5px dashed #d8cdb8;
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; overflow:hidden; background:var(--gold-soft);
+  }
+  .photo-box.filled{ border-style:solid; }
+  .photo-box img{ width:100%; height:100%; object-fit:cover; }
+  .photo-box svg{ width:22px; height:22px; opacity:.7; }
+
+  .action-row{ display:flex; gap:10px; margin-top:2px; }
+  .act-btn{
+    flex:1; min-height:48px; border-radius:12px; border:none;
+    font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .act-btn.normal{ background:var(--green); color:#fff; }
+  .act-btn.issue{ background:var(--white); color:var(--orange); border:1.5px solid var(--orange); }
+  .act-btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .done-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--green-soft); border-radius:12px; padding:12px 14px; font-size:13.5px; font-weight:700; color:var(--green);
+  }
+  .done-banner.issue{ background:var(--orange-soft); color:var(--orange); }
+  .done-banner button{ background:none; border:none; font-size:12px; color:inherit; text-decoration:underline; cursor:pointer; font-weight:600; flex:none; }
+
+  .issue-form{ margin-top:6px; border-top:1px solid var(--line); padding-top:14px; }
+  .issue-form-label{ font-size:13.5px; font-weight:700; color:var(--navy); margin-bottom:9px; }
+  .cat-grid{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px; }
+  .cat-btn{ border:1.5px solid var(--line); background:var(--white); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; }
+  .cat-btn.sel{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .issue-form textarea{
+    width:100%; min-height:66px; border:1.5px solid var(--line); border-radius:10px; padding:11px; font-size:14.5px; font-family:inherit; resize:vertical; margin-bottom:12px;
+    background:var(--bg);
+  }
+  .issue-photo-row{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .issue-photo-box{ width:56px; height:56px; border:1.5px dashed #d8cdb8; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; flex:none; background:var(--gold-soft); }
+  .issue-photo-box img{ width:100%; height:100%; object-fit:cover; }
+  .issue-photo-box svg{ width:18px; height:18px; opacity:.7; }
+  .issue-photo-hint{ font-size:12px; color:var(--ink-soft); }
+
+  /* ── 최종 확인 ── */
+  .final-card{
+    margin-top:22px; background:var(--navy); border-radius:20px;
+    padding:26px 20px; text-align:center;
+  }
+  .final-num{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--gold); color:var(--navy); font-size:12.5px; font-weight:800; margin-bottom:14px; }
+  .final-q{ color:var(--white); font-size:19px; font-weight:700; line-height:1.6; margin-bottom:8px; }
+  .final-sub{ color:rgba(255,255,255,0.6); font-size:13px; margin-bottom:6px; font-weight:500; }
+  .final-remain{ color:var(--gold); font-size:13px; font-weight:700; margin-bottom:18px; }
+  .final-btns{ display:flex; flex-direction:column; gap:10px; }
+  .final-btn{ width:100%; min-height:52px; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; }
+  .final-btn.normal{ background:var(--gold); color:var(--navy); }
+  .final-btn.issue{ background:transparent; color:var(--white); border:1.5px solid rgba(255,255,255,0.3); }
+  .final-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .final-pick{ margin-top:16px; text-align:left; }
+  .final-pick select{ width:100%; min-height:46px; border-radius:10px; border:none; padding:0 10px; font-size:15px; margin-bottom:10px; }
+
+  /* ── 완료 화면 ── */
+  .done-screen{ display:none; text-align:center; padding:60px 16px; }
+  .done-screen.show{ display:block; }
+  .done-circle{ width:80px; height:80px; border-radius:50%; background:var(--gold); color:var(--navy); font-size:38px; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
+  .done-screen h2{ color:var(--navy); font-size:23px; margin:0 0 8px; font-weight:800; }
+  .done-screen p{ color:var(--ink-soft); font-size:14.5px; margin:2px 0; font-weight:500; }
+  .reset-btn{ margin-top:24px; background:none; border:1.5px solid var(--line); color:var(--ink-soft); padding:12px 20px; border-radius:999px; font-size:13.5px; font-weight:600; cursor:pointer; }
+
+  /* ── 관리자 화면 ── */
+  .admin-wrap{ display:none; }
+  .admin-wrap.show{ display:block; }
+  .admin-summary{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .admin-stat{ flex:1; min-width:100px; background:var(--white); border-radius:14px; padding:16px; text-align:center; box-shadow:0 1px 3px rgba(44,58,82,0.06); }
+  .admin-stat b{ display:block; font-size:22px; font-weight:800; color:var(--navy); }
+  .admin-stat span{ font-size:11.5px; color:var(--ink-soft); font-weight:600; }
+  .admin-item{ background:var(--white); border-radius:14px; padding:14px 16px; margin-bottom:10px; box-shadow:0 1px 3px rgba(44,58,82,0.06); border-left:4px solid var(--line); }
+  .admin-item.issue{ border-left-color:var(--orange); }
+  .admin-item-head{ display:flex; justify-content:space-between; font-weight:700; font-size:14.5px; color:var(--navy); margin-bottom:6px; }
+  .admin-item .meta{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
+  .admin-item .meta b{ color:var(--ink); font-weight:600; }
+  .admin-label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:16px 2px 8px; }
+
+  .hidden{ display:none !important; }
+  .pin-overlay{ position:fixed; inset:0; background:rgba(44,58,82,0.5); display:flex; align-items:center; justify-content:center; z-index:100; }
+  .pin-box{ background:var(--white); border-radius:18px; padding:26px; width:260px; text-align:center; }
+  .pin-box input{ width:100%; text-align:center; font-size:22px; letter-spacing:6px; padding:12px; border-radius:10px; border:1.5px solid var(--line); margin:14px 0; }
+  .pin-box button{ width:100%; min-height:46px; background:var(--navy); color:var(--white); border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; }
+
+  /* ── 하단 고정 진행 상황 바 ── */
+  .bottombar{
+    position:fixed; left:0; right:0; bottom:0; z-index:60;
+    background:var(--white); border-top:1px solid var(--line);
+    padding:10px 16px; display:flex; align-items:center; gap:14px;
+    box-shadow:0 -2px 8px rgba(44,58,82,0.05);
+  }
+  .bb-item{ display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700; color:var(--ink-soft); }
+  .bb-dot{ width:8px; height:8px; border-radius:50%; }
+  .bb-dot.normal{ background:var(--green); }
+  .bb-dot.issue{ background:var(--orange); }
+  .bb-dot.pending{ background:#c9c2b0; }
+  .bb-track{ flex:1; height:6px; background:var(--navy-soft); border-radius:99px; overflow:hidden; }
+  .bb-fill{ height:100%; background:var(--gold); width:0%; transition:width .3s; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row1">
+    <div>
+      <h1>종로점 오픈 체크리스트</h1>
+      <div class="date" id="dateLabel">-</div>
+    </div>
+    <div class="mode-switch" id="viewSwitch">
+      <button class="mode-btn active" data-view="staff">직원</button>
+      <button class="mode-btn" data-view="admin">관리자</button>
+    </div>
+  </div>
+  <div class="topbar-substrip">
+    <div class="mode-switch staffmode" id="staffModeSwitch" style="flex:1;">
+      <button class="mode-btn active" data-staffmode="new">신규 직원</button>
+      <button class="mode-btn" data-staffmode="exp">숙련 직원</button>
+    </div>
+  </div>
+  <div class="progress-line">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-num" id="progressNum">0/12</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div id="staffWrap">
+    <div class="grid" id="grid"></div>
+
+    <div class="final-card" id="finalCard">
+      <div class="final-num">12</div>
+      <div class="final-q">지금 첫 손님 10명이 들어와도<br>바로 영업할 수 있습니까?</div>
+      <div class="final-sub">1~11번 진행 상황 <b id="finalProg">0/11</b></div>
+      <div class="final-remain hidden" id="finalRemain"></div>
+      <div class="final-btns">
+        <button class="final-btn normal" id="btnFinalNormal" disabled>정상 → 오픈 완료</button>
+        <button class="final-btn issue" id="btnFinalIssue">이상 있음</button>
+      </div>
+      <div class="final-pick hidden" id="finalPick">
+        <select id="finalPickSelect"></select>
+        <button class="final-btn normal" id="btnFinalPickGo">해당 항목 조치하러 이동</button>
+      </div>
+    </div>
+
+    <div class="done-screen" id="doneScreen">
+      <div class="done-circle" id="doneCircle">✓</div>
+      <h2 id="doneTitle">오픈 완료</h2>
+      <p id="doneDesc">오늘도 좋은 하루 되세요.</p>
+      <button class="reset-btn" id="resetBtn">관리자 리셋</button>
+    </div>
+  </div>
+
+  <div class="admin-wrap" id="adminWrap">
+    <div class="admin-summary">
+      <div class="admin-stat"><b id="admProgress">0/12</b><span>오픈 진행률</span></div>
+      <div class="admin-stat"><b id="admNormal">0</b><span>정상</span></div>
+      <div class="admin-stat"><b id="admIssue">0</b><span>이상 있음</span></div>
+      <div class="admin-stat"><b id="admPending">11</b><span>미완료</span></div>
+    </div>
+    <div id="admList"></div>
+    <button class="reset-btn" id="adminResetBtn">오늘 체크리스트 리셋</button>
+  </div>
+
+</div>
+
+<div class="bottombar">
+  <div class="bb-item"><span class="bb-dot normal"></span><span id="bbNormal">0</span> 정상</div>
+  <div class="bb-item"><span class="bb-dot issue"></span><span id="bbIssue">0</span> 이상</div>
+  <div class="bb-item"><span class="bb-dot pending"></span><span id="bbPending">11</span> 미완료</div>
+  <div class="bb-track"><div class="bb-fill" id="bbFill"></div></div>
+</div>
+
+<div class="pin-overlay hidden" id="pinOverlay">
+  <div class="pin-box">
+    <div style="font-weight:700; color:var(--navy); font-size:15px;">관리자 PIN 입력</div>
+    <input type="password" inputmode="numeric" maxlength="4" id="pinInput">
+    <button id="pinSubmit">확인</button>
+  </div>
+</div>
+
+<script>
+const STORE = "종로점";
+const ISSUE_CATS = ["오염","준비 부족","비품 부족","장비 문제","연결 문제","파손","기타"];
+const ADMIN_PIN = "5324";
+
+const sections = [
+  { id:1, title:"출입문 · 매장 외부 오픈", photoRequired:3,
+    photoLabels:["외부 전체 배치 상태","입간판 앞면 — 초밥 모형 부착 확인","입간판 뒷면 — 초밥 모형 부착 확인"],
+    steps:["출입문 열기","외부 메뉴판 꺼내기","입간판 외부에 초밥 모형 잘 붙여 달아 꺼내두기","포장용 가구 외부에 배치","외부 전선·코드 가지런히 정리","외부 배치 상태 확인","사진 촬영 및 보고"],
+    highlightSteps:[2],
+    criteria:"손님이 바로 들어올 수 있고 외부가 정돈된 상태" },
+  { id:2, title:"메인 POS · 태블릿 전원 및 연결", photoRequired:2,
+    photoLabels:["메인 POS 개점 및 오늘 날짜 확인","태블릿 테이블 번호·정상 연결 상태 확인"],
+    steps:["메인 POS 먼저 ON → 개점","주방 POS ON","벽걸이 POS ON","이동식 POS ON","태블릿 ON","태블릿 테이블 번호 확인","개점일이 오늘 날짜와 일치하는지 확인","메인 POS와 정상 연결 확인","실제 주문 가능한 상태 확인","사진 촬영 및 보고"],
+    redSteps:[0],
+    criteria:"모든 기기가 정상 연결되고 실제 주문을 받을 수 있는 상태",
+    note:"POS 오픈 순서(메인 POS → 다른 POS → 태블릿)는 임의 변경하지 마세요." },
+  { id:3, title:"매장 음악", photoRequired:2,
+    photoLabels:["최우영 전용 채널 확인","볼륨 29 확인"],
+    steps:["음악 ON","최우영 전용 채널 확인","볼륨 29 확인","채널·볼륨 사진 보고"],
+    redSteps:[2],
+    criteria:"지정 채널과 볼륨이 정확하게 설정된 상태" },
+  { id:4, title:"바닥 · 기본 청소",
+    steps:["바닥 전체 쓸기","정해진 세척 방법으로 바닥 전체 닦기","심한 얼룩 별도 제거","사용한 마대 세척"],
+    criteria:"음식물·쓰레기·눈에 띄는 얼룩이 없는 상태" },
+  { id:5, title:"테이블·태블릿·키오스크 청소 · 의자·바 테이블 하부",
+    steps:["전체 행주 깨끗하게 세척","세제 행주로 테이블 1차 닦기","깨끗한 행주로 바로 2차 닦기","락교·초생강 작업 테이블은 마지막에 별도 세척","냄새 확인","태블릿 화면·외부 닦기","키오스크 닦기","냉장고 외부 닦기","의자 좌석 및 주변 털기","의자 얼룩 확인 후 닦기","바 테이블 아래 바구니 쓰레기 확인","쓰레기 즉시 제거","바구니 얼룩 제거","바구니 뚜껑 제대로 닫기"],
+    redSteps:[1],
+    criteria:"냄새·얼룩·끈적임 없이 손님이 바로 사용할 수 있고, 의자·바 테이블 주변도 쓰레기·얼룩 없이 정돈된 상태" },
+  { id:6, title:"냉장고 · 주변 정리",
+    steps:["냉장고 외부 상태 확인","선반 닦기","냉장고 주변 정리"],
+    criteria:"손님에게 보이는 부분까지 깨끗하고 정돈된 상태" },
+  { id:7, title:"테이블 기본 세팅",
+    steps:["락교·초생강 세팅","간장 세팅","수저 확인","컵 등 기본 비품 확인"],
+    criteria:"손님이 앉으면 바로 식사를 시작할 수 있는 상태" },
+  { id:8, title:"장국 · 음용수 · 기본 준비",
+    steps:["장국 준비 및 상태 확인","물통 3개 미리 준비","물티슈 확인","와사비 5판 세팅","우동 단무지 5판 세팅","시치미 준비 확인"],
+    criteria:"첫 손님부터 필요한 물품과 음식을 기다리지 않고 바로 제공할 수 있는 상태" },
+  { id:9, title:"포장 준비",
+    steps:["포장봉투","스티커","명함","기타 포장 구성품 및 수량 확인"],
+    criteria:"포장 주문이 들어오면 준비물을 찾으러 다니지 않고 바로 포장할 수 있는 상태" },
+  { id:10, title:"외부 유리 청소",
+    steps:["출입문 유리 닦기","외부 유리 전체 닦기","손자국·물자국·얼룩 확인","남아 있으면 다시 닦기"],
+    criteria:"밖에서 봤을 때 손자국·물자국·얼룩이 없는 상태" },
+  { id:11, title:"청소 마지막 · 매트 털기",
+    steps:["매트 털기","먼지·음식물·이물질 제거","매트 주변 확인","깨끗하게 제자리 배치"],
+    criteria:"매트와 주변 바닥까지 깨끗하게 정돈된 상태",
+    note:"반드시 유리 청소 등 기본 청소가 모두 끝난 후 가장 마지막에 실행합니다." },
+];
+
+const cameraSVG = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" stroke="#2c3a52" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="14" r="3.3" stroke="#2c3a52" stroke-width="1.8"/></svg>`;
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+const STORAGE_KEY = `openChecklist_${STORE}_${todayStr()}`;
+
+function freshState(){
+  return {
+    expanded: sections.map(()=>false),
+    sec: sections.map(s => ({
+      status:'pending', // pending | normal | issue-open | issue-resolved
+      issueCategory:null, issueNote:'', issuePhoto:null,
+      photos: new Array(s.photoRequired||0).fill(null),
+      time:null,
+    })),
+    finalStatus:null, finalTime:null, finalPickOpen:false,
+    view:'staff', staffMode:'new',
+  };
+}
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      const fresh = freshState();
+      fresh.sec = fresh.sec.map((s,i)=> parsed.sec && parsed.sec[i] ? {...s, ...parsed.sec[i]} : s);
+      fresh.finalStatus = parsed.finalStatus || null;
+      fresh.finalTime = parsed.finalTime || null;
+      fresh.staffMode = parsed.staffMode || 'new';
+      return fresh;
+    }
+  }catch(e){}
+  return freshState();
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+document.getElementById('dateLabel').textContent = todayStr() + ` · ${STORE}`;
+
+const gridEl = document.getElementById('grid');
+
+function secDone(i){
+  const s = state.sec[i];
+  return s.status === 'normal' || s.status === 'issue-resolved';
+}
+
+function render(){
+  let normalCount=0, issueCount=0, pendingCount=0;
+  state.sec.forEach(s=>{
+    if(s.status==='normal') normalCount++;
+    else if(s.status==='issue-resolved') issueCount++;
+    else pendingCount++;
+  });
+  const doneCount = normalCount+issueCount;
+  const totalProgress = doneCount + (state.finalStatus ? 1:0);
+
+  document.getElementById('progressNum').textContent = `${totalProgress}/12`;
+  document.getElementById('progressFill').style.width = (totalProgress/12*100)+'%';
+  document.getElementById('bbNormal').textContent = normalCount;
+  document.getElementById('bbIssue').textContent = issueCount;
+  document.getElementById('bbPending').textContent = pendingCount;
+  document.getElementById('bbFill').style.width = (totalProgress/12*100)+'%';
+
+  gridEl.innerHTML = sections.map((sec,i)=>{
+    const st = state.sec[i];
+    const open = state.expanded[i] || state.staffMode==='new';
+    const photoOk = !sec.photoRequired || st.photos.filter(Boolean).length >= sec.photoRequired;
+    const statusClass = st.status==='normal' ? 'status-normal' : (st.status==='issue-resolved'||st.status==='issue-open' ? 'status-issue' : '');
+
+    let bodyHtml = '';
+    if(open){
+      bodyHtml += `<ol class="steps">${sec.steps.map((s,si)=>{
+        if(sec.highlightSteps && sec.highlightSteps.includes(si)) return `<li><span class="step-highlight">${s}</span></li>`;
+        if(sec.redSteps && sec.redSteps.includes(si)) return `<li><span class="step-red">${s}</span></li>`;
+        return `<li>${s}</li>`;
+      }).join('')}</ol>`;
+    }
+    if(sec.note){ bodyHtml += `<div class="note-line">${sec.note}</div>`; }
+
+    if(sec.photoRequired){
+      bodyHtml += `<div class="photo-slots">${sec.photoLabels.map((label,pi)=>`
+        <div class="photo-slot">
+          <div class="photo-slot-label">${label}</div>
+          <label class="photo-box ${st.photos[pi]?'filled':''}" data-si="${i}" data-pi="${pi}">
+            ${st.photos[pi] ? `<img src="${st.photos[pi]}">` : cameraSVG}
+            <input type="file" accept="image/*" capture="environment" class="req-photo-input" hidden data-si="${i}" data-pi="${pi}">
+          </label>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    let actionHtml = '';
+    if(st.status === 'normal'){
+      actionHtml = `<div class="done-banner">정상 완료 · ${st.time||''}<button data-reopen="${i}">되돌리기</button></div>`;
+    }else if(st.status === 'issue-resolved'){
+      actionHtml = `<div class="done-banner issue">이상 조치 완료 · ${st.issueCategory||''}<button data-reopen="${i}">되돌리기</button></div>`;
+    }else if(st.status === 'issue-open'){
+      actionHtml = `
+        <div class="issue-form">
+          <div class="issue-form-label">문제가 무엇입니까?</div>
+          <div class="cat-grid">${ISSUE_CATS.map(c=>`<button class="cat-btn ${st.issueCategory===c?'sel':''}" data-catsel="${i}" data-cat="${c}">${c}</button>`).join('')}</div>
+          <textarea placeholder="문제 및 조치 내용을 적어주세요" data-note="${i}">${st.issueNote||''}</textarea>
+          <div class="issue-photo-row">
+            <label class="issue-photo-box" data-si="${i}">
+              ${st.issuePhoto ? `<img src="${st.issuePhoto}">` : cameraSVG}
+              <input type="file" accept="image/*" capture="environment" class="issue-photo-input" hidden data-si="${i}">
+            </label>
+            <div class="issue-photo-hint">필요한 경우에만 사진 첨부 (선택)</div>
+          </div>
+          <button class="act-btn normal" style="width:100%;" data-resolve="${i}">조치 완료 · 정상 상태로 변경</button>
+        </div>`;
+    }else{
+      actionHtml = `<div class="action-row">
+        <button class="act-btn normal" data-normal="${i}" ${!photoOk?'disabled':''}>정상</button>
+        <button class="act-btn issue" data-issue="${i}">이상 있음</button>
+      </div>`;
+      if(sec.photoRequired && !photoOk){
+        actionHtml += `<div style="font-size:12px;color:var(--orange);font-weight:600;margin-top:8px;">사진 ${sec.photoRequired}장을 모두 등록해야 정상 처리할 수 있습니다.</div>`;
+      }
+    }
+
+    return `
+    <div class="card ${statusClass}">
+      <div class="card-head" data-toggle="${i}">
+        <div class="card-head-left">
+          <div class="card-num">${sec.id}</div>
+          <div class="card-title-wrap">
+            <div class="card-title">${sec.title}${sec.photoRequired?'<span class="camera-mark">사진 필수</span>':''}</div>
+            <div class="card-crit">완료 → ${sec.criteria}</div>
+          </div>
+        </div>
+        <div class="chev ${open?'open':''}">▾</div>
+      </div>
+      <div class="card-body">
+        ${bodyHtml}
+        ${actionHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  const allDone = state.sec.every((s,i)=>secDone(i));
+  document.getElementById('finalProg').textContent = `${doneCount}/11`;
+  document.getElementById('btnFinalNormal').disabled = !allDone || !!state.finalStatus;
+  document.getElementById('btnFinalIssue').disabled = !!state.finalStatus;
+  const remainEl = document.getElementById('finalRemain');
+  if(!allDone && !state.finalStatus){
+    const remainNums = state.sec.map((s,i)=> secDone(i)?null:sections[i].id).filter(Boolean);
+    remainEl.textContent = `미완료: ${remainNums.join(', ')}번`;
+    remainEl.classList.remove('hidden');
+  }else{
+    remainEl.classList.add('hidden');
+  }
+
+  const pickSel = document.getElementById('finalPickSelect');
+  pickSel.innerHTML = sections.map((s,i)=>`<option value="${i}">${s.id}. ${s.title}</option>`).join('');
+  document.getElementById('finalPick').classList.toggle('hidden', !state.finalPickOpen);
+
+  if(state.finalStatus){
+    document.getElementById('staffWrap').querySelectorAll('.grid, .final-card').forEach(el=>el.classList.add('hidden'));
+    const ds = document.getElementById('doneScreen');
+    ds.classList.add('show');
+    const circle = document.getElementById('doneCircle');
+    if(state.finalStatus==='normal'){
+      circle.textContent='✓'; circle.style.background='var(--gold)'; circle.style.color='var(--navy)';
+      document.getElementById('doneTitle').textContent = '오픈 완료';
+      document.getElementById('doneDesc').textContent = `${state.finalTime||''} · 오늘도 좋은 하루 되세요.`;
+    }else{
+      circle.textContent='!'; circle.style.background='var(--orange)'; circle.style.color='#fff';
+      document.getElementById('doneTitle').textContent = '조치 후 오픈 완료';
+      document.getElementById('doneDesc').textContent = `${state.finalTime||''} · 문제 항목을 조치하고 오픈했습니다.`;
+    }
+  }else{
+    document.getElementById('staffWrap').querySelectorAll('.grid, .final-card').forEach(el=>el.classList.remove('hidden'));
+    document.getElementById('doneScreen').classList.remove('show');
+  }
+
+  renderAdmin(normalCount, issueCount, pendingCount, totalProgress);
+  saveState();
+}
+
+function renderAdmin(normalCount, issueCount, pendingCount, totalProgress){
+  document.getElementById('admProgress').textContent = `${totalProgress}/12`;
+  document.getElementById('admNormal').textContent = normalCount;
+  document.getElementById('admIssue').textContent = issueCount;
+  document.getElementById('admPending').textContent = pendingCount;
+
+  const issues = sections.map((sec,i)=>({sec,st:state.sec[i],i})).filter(x=> x.st.status==='issue-resolved' || x.st.status==='issue-open');
+  const others = sections.map((sec,i)=>({sec,st:state.sec[i],i})).filter(x=> !(x.st.status==='issue-resolved' || x.st.status==='issue-open'));
+
+  let html = '';
+  issues.forEach(({sec,st})=>{
+    html += `<div class="admin-item issue">
+      <div class="admin-item-head"><span>${sec.id}. ${sec.title}</span><span>${st.status==='issue-open'?'이상 발생':'조치 완료'}</span></div>
+      <div class="meta">
+        <div>문제 유형: <b>${st.issueCategory||'-'}</b></div>
+        <div>내용: <b>${st.issueNote||'-'}</b></div>
+        <div>완료 시간: <b>${st.time||'-'}</b></div>
+      </div>
+    </div>`;
+  });
+  if(state.finalStatus === 'issue'){
+    html = `<div class="admin-item issue"><div class="admin-item-head"><span>12. 오픈 최종 확인</span><span>이상 있음 → 조치 후 완료</span></div></div>` + html;
+  }
+  html += `<div class="admin-label">정상 / 미완료 항목</div>`;
+  others.forEach(({sec,st})=>{
+    html += `<div class="admin-item"><div class="admin-item-head"><span>${sec.id}. ${sec.title}</span><span style="color:${st.status==='normal'?'var(--green)':'var(--ink-soft)'}">${st.status==='normal'?'정상 완료':'미완료'}</span></div>${st.time?`<div class="meta">완료 시간: <b>${st.time}</b></div>`:''}</div>`;
+  });
+  document.getElementById('admList').innerHTML = html;
+}
+
+function timeNow(){
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function dataUrlToFile(dataUrl, filename){
+  const arr = dataUrl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8 = new Uint8Array(n);
+  while(n--){ u8[n] = bstr.charCodeAt(n); }
+  return new File([u8], filename, { type: mime });
+}
+
+function buildReportText(){
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const timeStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  let body = `【 종로점 오픈 체크리스트 】\n확인 시각: ${timeStr}\n\n`;
+  sections.forEach((sec,i)=>{
+    const st = state.sec[i];
+    let line = `${sec.id}. ${sec.title} — `;
+    if(st.status==='normal') line += '정상';
+    else if(st.status==='issue-resolved') line += `이상 있음 → 조치 완료 (${st.issueCategory}: ${st.issueNote})`;
+    else line += '미완료';
+    body += line + '\n';
+  });
+  body += `\n12. 오픈 최종 확인: ${state.finalStatus==='normal' ? '정상 → 오픈 완료' : state.finalStatus||''}\n`;
+  const photoCount = state.sec.reduce((s,x)=> s + x.photos.filter(Boolean).length + (x.issuePhoto?1:0), 0);
+  body += `\n첨부 사진: ${photoCount}장\n오늘도 정말 수고 많으셨습니다!`;
+  return body;
+}
+
+async function shareReport(){
+  const reportText = buildReportText();
+  const shareFiles = [];
+  state.sec.forEach((st,si)=>{
+    st.photos.forEach((p,pi)=>{ if(p) shareFiles.push(dataUrlToFile(p, `오픈_${si+1}-${pi+1}.jpg`)); });
+    if(st.issuePhoto) shareFiles.push(dataUrlToFile(st.issuePhoto, `오픈_이상_${si+1}.jpg`));
+  });
+  const shareData = { title:'종로점 오픈 체크리스트', text: reportText };
+  if(shareFiles.length && navigator.canShare && navigator.canShare({ files: shareFiles })){
+    shareData.files = shareFiles;
+  }
+  if(navigator.share){
+    try{
+      await navigator.share(shareData);
+    }catch(e){
+      if(e && e.name === 'AbortError') return false;
+      try{ await navigator.clipboard.writeText(reportText); }catch(_){}
+      alert('이 화면에서는 공유창을 열 수 없어 보고 내용을 클립보드에 복사했습니다.\n사진은 별도로 첨부해서 카카오톡 등에 보내주세요.');
+    }
+  }else{
+    try{ await navigator.clipboard.writeText(reportText); }catch(e){}
+    alert('공유 기능을 지원하지 않는 브라우저입니다. 보고 내용이 클립보드에 복사되었습니다.\n사진은 별도로 첨부해서 카카오톡 등에 보내주세요.');
+  }
+  return true;
+}
+
+gridEl.addEventListener('click', (e)=>{
+  const toggle = e.target.closest('[data-toggle]');
+  if(toggle && !e.target.closest('.photo-box') && !e.target.closest('button')){
+    const i = +toggle.dataset.toggle;
+    state.expanded[i] = !state.expanded[i];
+    render(); return;
+  }
+  const photoBox = e.target.closest('.photo-box');
+  if(photoBox){ photoBox.querySelector('input').click(); return; }
+  const issuePhotoBox = e.target.closest('.issue-photo-box');
+  if(issuePhotoBox){ issuePhotoBox.querySelector('input').click(); return; }
+
+  const normalBtn = e.target.closest('[data-normal]');
+  if(normalBtn){
+    const i = +normalBtn.dataset.normal;
+    state.sec[i].status = 'normal';
+    state.sec[i].time = timeNow();
+    render(); return;
+  }
+  const issueBtn = e.target.closest('[data-issue]');
+  if(issueBtn){
+    const i = +issueBtn.dataset.issue;
+    state.sec[i].status = 'issue-open';
+    state.expanded[i] = true;
+    render(); return;
+  }
+  const catBtn = e.target.closest('[data-catsel]');
+  if(catBtn){
+    const i = +catBtn.dataset.catsel;
+    state.sec[i].issueCategory = catBtn.dataset.cat;
+    render(); return;
+  }
+  const resolveBtn = e.target.closest('[data-resolve]');
+  if(resolveBtn){
+    const i = +resolveBtn.dataset.resolve;
+    if(!state.sec[i].issueCategory){ alert('문제 유형을 선택해주세요.'); return; }
+    const noteEl = document.querySelector(`textarea[data-note="${i}"]`);
+    state.sec[i].issueNote = noteEl ? noteEl.value.trim() : state.sec[i].issueNote;
+    if(!state.sec[i].issueNote){ alert('조치 내용을 입력해주세요.'); return; }
+    state.sec[i].status = 'issue-resolved';
+    state.sec[i].time = timeNow();
+    render(); return;
+  }
+  const reopenBtn = e.target.closest('[data-reopen]');
+  if(reopenBtn){
+    const i = +reopenBtn.dataset.reopen;
+    if(!confirm('이 항목을 다시 미완료 상태로 되돌릴까요?')) return;
+    state.sec[i] = { status:'pending', issueCategory:null, issueNote:'', issuePhoto:null, photos: new Array(sections[i].photoRequired||0).fill(null), time:null };
+    render(); return;
+  }
+});
+
+gridEl.addEventListener('input', (e)=>{
+  if(e.target.matches('textarea[data-note]')){
+    const i = +e.target.dataset.note;
+    state.sec[i].issueNote = e.target.value;
+  }
+});
+
+function compressToDataUrl(file, maxW=900, quality=0.7){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxW/img.width);
+        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+        const canvas = document.createElement('canvas');
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+gridEl.addEventListener('change', async (e)=>{
+  if(e.target.classList.contains('req-photo-input')){
+    const si = +e.target.dataset.si, pi = +e.target.dataset.pi;
+    const file = e.target.files[0]; if(!file) return;
+    state.sec[si].photos[pi] = await compressToDataUrl(file);
+    render();
+  }else if(e.target.classList.contains('issue-photo-input')){
+    const si = +e.target.dataset.si;
+    const file = e.target.files[0]; if(!file) return;
+    state.sec[si].issuePhoto = await compressToDataUrl(file);
+    render();
+  }
+});
+
+document.getElementById('btnFinalNormal').addEventListener('click', async ()=>{
+  state.finalStatus = 'normal';
+  state.finalTime = timeNow();
+  const ok = await shareReport();
+  if(!ok){ state.finalStatus = null; state.finalTime = null; }
+  render();
+});
+document.getElementById('btnFinalIssue').addEventListener('click', ()=>{
+  state.finalPickOpen = true;
+  render();
+});
+document.getElementById('btnFinalPickGo').addEventListener('click', ()=>{
+  const i = +document.getElementById('finalPickSelect').value;
+  state.sec[i].status = 'issue-open';
+  state.expanded[i] = true;
+  state.finalPickOpen = false;
+  render();
+  document.querySelectorAll('.card')[i]?.scrollIntoView({behavior:'smooth', block:'center'});
+});
+
+document.getElementById('staffModeSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-staffmode]');
+  if(!btn) return;
+  document.querySelectorAll('#staffModeSwitch .mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.staffMode = btn.dataset.staffmode;
+  render();
+});
+
+document.getElementById('viewSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-view]');
+  if(!btn) return;
+  if(btn.dataset.view === 'admin' && document.getElementById('adminWrap').classList.contains('show') === false){
+    openPin(()=>{ switchView('admin', btn); });
+    return;
+  }
+  switchView(btn.dataset.view, btn);
+});
+function switchView(view, btn){
+  document.querySelectorAll('#viewSwitch .mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('staffWrap').classList.toggle('hidden', view==='admin');
+  document.getElementById('adminWrap').classList.toggle('show', view==='admin');
+}
+
+function openPin(onSuccess){
+  const overlay = document.getElementById('pinOverlay');
+  const input = document.getElementById('pinInput');
+  input.value=''; overlay.classList.remove('hidden'); input.focus();
+  const submit = ()=>{
+    if(input.value === ADMIN_PIN){
+      overlay.classList.add('hidden');
+      document.getElementById('pinSubmit').removeEventListener('click', submit);
+      onSuccess();
+    }else{
+      alert('PIN이 올바르지 않습니다.');
+      input.value=''; input.focus();
+    }
+  };
+  document.getElementById('pinSubmit').onclick = submit;
+}
+
+function doReset(){
+  if(!confirm('오늘 체크리스트를 전부 초기화합니다.\n이 작업은 되돌릴 수 없습니다. 계속할까요?')) return;
+  if(!confirm('정말로 초기화하시겠습니까? (마지막 확인)')) return;
+  state = freshState();
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+}
+document.getElementById('resetBtn').addEventListener('click', ()=> openPin(doReset));
+document.getElementById('adminResetBtn').addEventListener('click', doReset);
+
+render();
+</script>
+</body>
+</html>
